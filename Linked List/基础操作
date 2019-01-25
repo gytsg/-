@@ -1,0 +1,258 @@
+基础操作
+
+#单向链表的节点定义
+struct ListNode{
+    ListNode* m_pNext;
+    int m_nValue;
+}
+
+#链表末尾插入一个节点
+(特别注意pHead是一个指向指针的指针。当在空链表中插入一个节点时，新插入的节点就是链表的头指针，此时会改动pHead，因此需把其改为指向指针的指针，否则离开这个函数pHead仍为空指针。)
+void AddToTail(ListNode** pHead, int value){
+    ListNode* pNew = new ListNode();
+    pNew->m_nValue = value;
+    pNew->m_pNext = nullptr;
+    if(*pHead == nullptr){
+        *pHead = pNew;
+    }
+    else{
+        ListNode* pNode = pHead;
+        while(pNode->m_pNext != nullptr)
+            pNode = pNode->m_pNext;
+        pNode->m_pNext = pNew;
+    }
+}
+
+#删除第一个为某值的节点
+void RemoveNode(ListNode** pHead, int value){
+    if(pHead==nullptr||*pHead==nullptr)
+        return;
+    ListNode* pToBeDeleted = nullptr;
+    if((*pHead)->m_nValue == value)){
+        pToBeDeleted = *pHead;
+        *pHead = (*pHead)->m_pNext;
+    }
+    else{
+        ListNode* pNode = *pHead;
+        while(pNode->m_pNext != nullptr && pNode->m_pNext->m_nValue != value)
+            pNode = pNode->m_pNext;
+        if(pNode->m_pNext != nullptr && pNode->m_pNext->m_nValue == value){
+            pToBeDeleted = pNode->m_pNext;
+            pNode->m_pNext = pNode->m_pNext->m_pNext;
+        }
+    }
+    if(pToBeDeleted != nullptr){
+        delete pToBeDeleted;
+        pToBeDeleted = nullptr;
+    }
+}
+
+1.剑指offer 24题
+反转链表
+
+1.输入的链表头指针为nullptr或者整个链表只有一个节点时，程序立即崩溃。
+2.反转后的链表出现断裂。
+3.返回的反转之后的头节点不是原始链表的尾节点。
+
+ListNode * reverse(ListNode * head) 
+{ // write your code here 
+ListNode* pReverseHead = nullptr;
+ListNode* pPre = nullptr;
+ListNode* pNode = head; 
+while(pNode != nullptr) {
+ListNode* pNext = pNode->next; 
+if(pNext == nullptr) {
+pReverseHead = pNode;
+}
+pNode->next = pPre;
+pPre = pNode;
+pNode = pNext;
+} 
+return pReverseHead;
+}
+
+
+2.LintCode 96 链表划分
+链表划分
+
+/*
+* 直接创建两个链表：一个链表存放小于x的元素，另一个存放大于或等于x的元素。
+* 然后迭代访问整个链表，将元素插入before或者after链表末尾。一旦抵达链表末端，则表明拆分完毕，最后合并两个链表。
+*注意是添加一个节点，而非以该节点为头节点的链表。
+*/
+
+ListNode * partition(ListNode * head, int x) {
+        // write your code here
+        ListNode* beforestart = NULL;
+        ListNode* beforeend = NULL;
+        ListNode* afterstart = NULL;
+        ListNode* afterend = NULL;
+        ListNode* pNode = head;
+        if(head == NULL)
+          return NULL;
+        
+        while(pNode != NULL)
+        {
+            ListNode* next = pNode->next;    //将链表存储在next中
+            pNode->next = NULL;     //将node的next清零表示，只是添加一个节点，而非以该节点为头结点的链表
+            if(pNode->val < x)
+            {
+                if(beforestart == NULL)
+                {
+                    beforestart = pNode;
+                    beforeend =beforestart;
+                }
+                else{
+                    beforeend->next = pNode;
+                    beforeend = pNode;
+                }
+            }
+            else{
+                if(afterstart == NULL)
+                {
+                    afterstart = pNode;
+                    afterend = afterstart;
+                }
+                else{
+                    afterend->next = pNode;
+                    afterend = pNode;
+                }
+            }
+            pNode = next;
+        }
+        if(beforestart == NULL)
+          return afterstart;
+       
+        //合并
+        beforeend->next = afterstart;
+        //afterend->next = nullptr;
+        return beforestart;
+    }
+
+
+3.LintCode 36 链表翻转Ⅱ
+
+/*
+*思路与上类似，注意考虑特殊情况。
+*若给pNode赋值为头节点，链表遍历过程中，pNode就表示原链表中相应节点，原链表对应进行增删查改操作。
+*/
+
+
+ListNode * reverseBetween(ListNode * head, int m, int n) {
+        // write your code here
+        ListNode* beforeNodeStart = NULL;
+        ListNode* beforeNodeEnd = NULL;
+        ListNode* changeNodeStart = NULL;
+        ListNode* changeNodeEnd = NULL;
+        ListNode* afterNode = NULL;
+        ListNode* pNode = head;
+        int count = 1;
+        
+        if(head==NULL)
+          return NULL;
+        
+        while(pNode != NULL){
+            ListNode* next = pNode->next;
+            pNode->next = NULL;
+            
+            if(count<m){
+                if(beforeNodeStart == NULL){
+                    beforeNodeStart = pNode;
+                    beforeNodeEnd = beforeNodeStart;
+                }else{
+                    beforeNodeEnd->next = pNode;
+                    beforeNodeEnd = pNode;
+                }
+            }else if(count>=m && count<=n){
+                if(changeNodeStart == NULL){
+                    changeNodeStart = pNode;
+                    changeNodeEnd = changeNodeStart;
+                }else{
+                    pNode->next = changeNodeStart;
+                    changeNodeStart = pNode;
+                }
+            }else if(count>n){
+                afterNode = pNode;
+                afterNode->next = next;
+                break;
+            }
+            pNode = next;
+            count++;
+        }
+        
+        //combine
+        if(beforeNodeEnd != NULL){    //当前段链表为空时
+            beforeNodeEnd->next = changeNodeStart;
+            changeNodeEnd->next = afterNode;
+            return beforeNodeStart;
+        }else{
+            changeNodeEnd->next = afterNode;
+            return changeNodeStart;
+        }
+    }
+
+
+4.LintCode 99 链表重排
+
+/*
+*注意问题详见备注。
+*/
+
+void reorderList(ListNode * head) {
+        // write your code here
+        if(head==nullptr||head->next==nullptr) return ;
+        ListNode* slow=head;
+        ListNode* fast=head;
+        while(fast->next&&fast->next->next){
+            fast = fast->next->next;
+            slow = slow->next;
+        }
+        fast = slow->next;
+        slow->next = nullptr;  //注意要将前一段链表断开
+        ListNode* rhead = nullptr;
+        
+        //翻转后一段链表
+        while(fast){
+            ListNode* next = fast->next;  //保存节点后链表
+            fast->next = rhead;
+            rhead = fast;
+            fast = next;
+        }
+
+        //交叉插入
+        slow = head;
+        fast = rhead;
+        while(slow&&fast){
+            ListNode* next1 = slow->next;
+            ListNode* next2 = fast->next;
+            
+            fast->next = next1;
+            slow->next = fast;
+            
+            slow = next1;
+            fast = next2;
+        }
+  }
+
+
+5.LintCode 102 带环链表
+
+/*
+*若无环，快指针追不上慢指针；若有环，快指针会与慢指针相遇。
+*/
+
+bool hasCycle(ListNode * head) {
+        // write your code here
+        if(head==nullptr) return false;
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while(fast!=nullptr&&fast->next!=nullptr){
+            fast = fast->next->next;
+            slow = slow->next;
+            if(fast == slow){
+                return true;
+            }
+        }
+        return false;
+  }
+补充：https://www.jianshu.com/p/920abb02dda3  对应 LeetCode 103 带环链表Ⅱ
